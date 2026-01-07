@@ -4,7 +4,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.0+-red.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A reinforcement learning implementation of Tic-Tac-Toe where an AI agent learns optimal gameplay using Deep Q-Network (DQN). Train the AI through self-play and challenge it in an interactive command-line interface!
+A reinforcement learning implementation of Tic-Tac-Toe where an AI agent learns optimal gameplay using Deep Q-Network (DQN). Train the AI through self-play and challenge it in an interactive command-line interface or through a modern web interface!
 
 ## Table of Contents
 
@@ -15,7 +15,8 @@ A reinforcement learning implementation of Tic-Tac-Toe where an AI agent learns 
 - [Installation](#installation)
 - [Usage](#usage)
   - [Training the AI](#training-the-ai)
-  - [Playing Against the AI](#playing-against-the-ai)
+  - [Playing Against the AI (CLI)](#playing-against-the-ai-cli)
+  - [Playing Against the AI (Web)](#playing-against-the-ai-web)
 - [Code Explanation](#code-explanation)
 - [Definitions and Explanations](#definitions-and-explanations)
 - [Contributing](#contributing)
@@ -23,9 +24,9 @@ A reinforcement learning implementation of Tic-Tac-Toe where an AI agent learns 
 
 ## Introduction
 
-This project implements a Tic-Tac-Toe game where an AI agent learns to play optimally using Deep Q-Network (DQN), a reinforcement learning algorithm. The AI is trained through self-play, improving its strategy over time. Users can then play against the trained AI via a command-line interface.
+This project implements a Tic-Tac-Toe game where an AI agent learns to play optimally using Deep Q-Network (DQN), a reinforcement learning algorithm. The AI is trained through self-play, improving its strategy over time. Users can then play against the trained AI via a command-line interface or through an interactive web application.
 
-The project consists of several Python scripts that handle game logic, training, and gameplay. It uses PyTorch for the neural network implementation and NumPy for numerical operations.
+The project consists of several Python scripts that handle game logic, training, and gameplay, along with a Flask web server and modern HTML/CSS/JavaScript frontend. It uses PyTorch for the neural network implementation and NumPy for numerical operations.
 
 ### Demo
 
@@ -51,11 +52,13 @@ X | O | 3
 ## Features
 
 - 🧠 **Reinforcement Learning**: AI learns through self-play using DQN
-- 🎮 **Interactive Gameplay**: Play against the trained AI in CLI
+- 🎮 **Interactive Gameplay**: Play against the trained AI in CLI or web interface
+- 🌐 **Web Interface**: Modern, responsive web application with real-time gameplay
 - 📊 **Experience Replay**: Stable training with memory buffer
 - 🔄 **Epsilon-Greedy Exploration**: Balances exploration and exploitation
 - 💾 **Model Persistence**: Save and load trained models
 - 🏆 **Smart Logic**: Basic rule-based AI for faster initial learning
+- 📈 **Score Tracking**: Track wins, losses, and draws in web interface
 
 ## Technologies and Concepts
 
@@ -68,6 +71,7 @@ X | O | 3
 |---------|---------|----------|--------------|
 | **NumPy** | Scientific computing, array operations | Represent Tic-Tac-Toe board as 3x3 array | Board initialized as `np.zeros((3,3), dtype=int)`; 0=empty, 1=AI(X), -1=Human(O) |
 | **PyTorch** | Machine learning, neural networks | Implement DQN, tensor ops, training/inference | Subclass `nn.Module` for DQN network; handles autograd for backprop |
+| **Flask** | Web framework, API server | Provide REST API for web-based gameplay | Routes for new games, player moves, and game state; serves static files |
 
 ### Key Concepts
 
@@ -133,7 +137,7 @@ python train.py
 - Progress is printed every 500 episodes
 - The trained model is saved as `dqn_model.pth`
 
-### Playing Against the AI
+### Playing Against the AI (CLI)
 
 After training, play against the AI:
 
@@ -146,13 +150,32 @@ python play.py
 - The AI will respond with its moves
 - Game continues until someone wins or it's a draw
 
+### Playing Against the AI (Web)
+
+Launch the web server for an interactive web-based experience:
+
+```bash
+python server.py
+```
+
+- Open your browser and navigate to `http://localhost:8000`
+- Click "New Game" to start (choose if you or AI goes first)
+- Click on board cells to make your moves
+- The AI responds automatically
+- Track your wins, losses, and draws
+- Modern, responsive interface with animations
+
 ## Code Overview
 
-The project is organized into three main Python files:
+The project is organized into several Python files and a web frontend:
 
 - `game_logic.py`: Implements the TicTacToe environment, including board management, move validation, win checking, and rendering.
 - `train.py`: Contains the DQN neural network, replay memory, agent class, and training loop for self-play.
 - `play.py`: Provides an interactive CLI for playing against the trained AI.
+- `server.py`: Flask web server that provides REST API endpoints for web-based gameplay.
+- `static/index.html`: Main HTML page for the web interface.
+- `static/style.css`: CSS styles for the modern, animated web interface.
+- `static/script.js`: JavaScript for handling user interactions and API calls.
 
 For detailed code explanations and inline comments, refer to the source files directly.
 

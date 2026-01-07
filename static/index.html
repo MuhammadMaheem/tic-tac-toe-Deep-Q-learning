@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe AI - DQN Neural Network</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="circle circle1"></div>
+        <div class="circle circle2"></div>
+        <div class="circle circle3"></div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>Tic-Tac-Toe AI</h1>
+            <p class="subtitle">Challenge the Deep Q-Network Neural Network</p>
+        </header>
+        
+        <div class="game-info">
+            <div class="info-card">
+                <div class="player-indicator">
+                    <span class="label">You</span>
+                    <span class="symbol player-x">O</span>
+                </div>
+            </div>
+            
+            <div class="info-card score-card">
+                <div class="score-item">
+                    <span class="score-label">Wins</span>
+                    <span class="score-value" id="player-wins">0</span>
+                </div>
+                <div class="score-divider"></div>
+                <div class="score-item">
+                    <span class="score-label">Draws</span>
+                    <span class="score-value" id="draws">0</span>
+                </div>
+                <div class="score-divider"></div>
+                <div class="score-item">
+                    <span class="score-label">Losses</span>
+                    <span class="score-value" id="ai-wins">0</span>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <div class="player-indicator">
+                    <span class="label">AI</span>
+                    <span class="symbol ai-o">X</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="message-box" id="message">
+            <span id="message-text">Click "New Game" to start!</span>
+        </div>
+        
+        <div class="game-board" id="game-board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" id="new-game-btn" onclick="startNewGame(false)">
+                <span class="btn-icon">🎮</span>
+                New Game (You Start)
+            </button>
+            <button class="btn btn-secondary" id="ai-start-btn" onclick="startNewGame(true)">
+                <span class="btn-icon">🤖</span>
+                New Game (AI Starts)
+            </button>
+        </div>
+        
+        <div class="ai-info">
+            <div class="ai-badge">
+                <span class="badge-icon">🧠</span>
+                <div class="badge-text">
+                    <strong>Deep Q-Network AI</strong>
+                    <span>Trained with Reinforcement Learning</span>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Built with PyTorch DQN | Neural Network learns through self-play</p>
+        </footer>
+    </div>
+    
+    <!-- Winner Modal -->
+    <div class="modal" id="winner-modal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modal-icon">🎉</div>
+            <h2 id="modal-title">You Won!</h2>
+            <p id="modal-message">Congratulations! You beat the AI!</p>
+            <button class="btn btn-primary" onclick="closeModal()">Play Again</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

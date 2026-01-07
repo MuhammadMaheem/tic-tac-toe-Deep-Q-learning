@@ -66,7 +66,7 @@ class ReplayMemory:
     Stores past experiences for training stability and decorrelation.
     """
 
-    def __init__(self, capacity=50000):
+    def __init__(self, capacity=100000):
         """
         Initialize the replay memory.
 
@@ -124,7 +124,7 @@ class DQNAgent:
     and Q-learning updates.
     """
 
-    def __init__(self, lr=1e-3, gamma=0.99, eps=1.0, eps_min=0.1, eps_decay=0.9995, device='cpu'):
+    def __init__(self, lr=1e-3, gamma=0.99, eps=1.0, eps_min=0.1, eps_decay=0.9995, device=None):
         """
         Initialize the DQN agent.
 
@@ -141,8 +141,10 @@ class DQNAgent:
         eps_decay : float, optional
             Epsilon decay factor per episode. Default is 0.9995.
         device : str, optional
-            Device for PyTorch tensors ('cpu' or 'cuda'). Default is 'cpu'.
+            Device for PyTorch tensors ('cpu', 'cuda', or None for auto-detect). Default is None.
         """
+        if device is None:
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.device = device
         self.model = DQN().to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
