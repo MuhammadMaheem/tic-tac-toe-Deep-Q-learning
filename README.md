@@ -51,14 +51,16 @@ X | O | 3
 
 ## Features
 
-- 🧠 **Reinforcement Learning**: AI learns through self-play using DQN
+- 🧠 **Reinforcement Learning**: AI learns through diverse self-play scenarios using DQN
+- 🎯 **Robust Training**: Randomized starting positions and bidirectional play (X and O)
+- 🤝 **Multiple Opponents**: Trains against itself and smart opponents for generalization
 - 🎮 **Interactive Gameplay**: Play against the trained AI in CLI or web interface
 - 🌐 **Web Interface**: Modern, responsive web application with real-time gameplay
-- 📊 **Experience Replay**: Stable training with memory buffer
-- 🔄 **Epsilon-Greedy Exploration**: Balances exploration and exploitation
+- 📊 **Experience Replay**: Stable training with large memory buffer (100k experiences)
+- 🔄 **Epsilon-Greedy Exploration**: Balances exploration and exploitation (decays to 0.05)
 - 💾 **Model Persistence**: Save and load trained models
 - 🏆 **Smart Logic**: Basic rule-based AI for faster initial learning
-- 📈 **Score Tracking**: Track wins, losses, and draws in web interface
+- 📈 **Score Tracking**: Track wins, losses, and draws with detailed statistics
 
 ## Technologies and Concepts
 
@@ -79,7 +81,12 @@ X | O | 3
 Reinforcement Learning is a type of machine learning where an agent learns to make decisions by interacting with an environment. The agent receives rewards or penalties for its actions and aims to maximize cumulative rewards over time.
 
 - **Why used**: RL is ideal for game-playing AI because it allows the agent to learn optimal strategies through trial and error, without explicit programming of game rules.
-- **How it works in this project**: The AI agent plays Tic-Tac-Toe games against itself. It receives rewards for winning (+1), draws (+0.3), and losses (0). Over many episodes, it learns to choose actions that maximize future rewards.
+- **How it works in this project**: The AI agent plays Tic-Tac-Toe through diverse training scenarios:
+  - **Randomized starting positions** (30% of games start with 1-3 random moves)
+  - **Plays as both X and O** to learn offensive and defensive strategies
+  - **Multiple opponent types**: 60% self-play, 40% against smart opponents
+  - **Comprehensive reward structure**: +1 for winning, +0.5 for draws, -1 for losses
+  - This ensures the agent experiences all possible game states and learns robust strategies
 
 #### Deep Q-Network (DQN)
 DQN is a deep learning variant of Q-learning, a model-free RL algorithm. It uses a neural network to approximate the Q-function, which estimates the expected future rewards for each action in a given state.
@@ -97,7 +104,7 @@ A technique where the agent stores past experiences (state, action, reward, next
 A policy that selects the best action with probability (1 - ε) and a random action with probability ε. The ε value decays over time to shift from exploration to exploitation.
 
 - **Why used**: This balances exploration (trying new actions) and exploitation (using known good actions) during training.
-- **How it works**: Initially, ε = 1.0 (mostly random actions). It decays to ε_min = 0.1 over episodes, allowing the agent to explore early and exploit learned knowledge later.
+- **How it works**: Initially, ε = 1.0 (mostly random actions). It decays to ε_min = 0.05 over episodes, allowing the agent to explore early and exploit learned knowledge later for optimal play.
 
 #### Tic-Tac-Toe Game Logic
 The rules and mechanics of the Tic-Tac-Toe game, including board representation, move validation, win checking, and draw detection.
@@ -114,8 +121,8 @@ The rules and mechanics of the Tic-Tac-Toe game, including board representation,
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/tic-tac-toe.git
-   cd tic-tac-toe
+   git clone https://github.com/your-username/tic-tac-toe-Deep-Q-learning.git
+   cd tic-tac-toe-Deep-Q-learning
    ```
 
 2. Install dependencies:
@@ -133,9 +140,16 @@ Run the training script to train the DQN agent:
 python train.py
 ```
 
-- The script trains for 20,000 episodes by default
-- Progress is printed every 500 episodes
-- The trained model is saved as `dqn_model.pth`
+**Advanced Training Features:**
+- **20000 episodes** by default for robust learning
+- **Randomized starting positions**: 30% of games start mid-game (1-3 moves already played) to explore all board states
+- **Bidirectional learning**: AI plays as both X and O to master offensive and defensive play
+- **Diverse opponents**: Trains against itself (60%) and smart opponents (40%) for better generalization
+- **Enhanced rewards**: Win (+1.0), Draw (+0.5), Loss (-1.0) for balanced learning
+- Progress printed every 500 episodes showing memory size, exploration rate, and win/loss/draw statistics
+- Trained model automatically saved as `dqn_model.pth`
+
+**Why these features matter**: The original training always started with an empty board and the AI as X, leading to overfitting on specific opening moves. The improved training exposes the agent to every possible game scenario, preventing memorization and ensuring the AI can handle any position effectively.
 
 ### Playing Against the AI (CLI)
 
@@ -164,6 +178,28 @@ python server.py
 - The AI responds automatically
 - Track your wins, losses, and draws
 - Modern, responsive interface with animations
+
+## Project Structure
+
+```
+tic-tac-toe-Deep-Q-learning/
+├── .git/                          # Git repository
+├── .gitignore                     # Git ignore file
+├── .venv/                         # Python virtual environment
+├── LICENSE                        # MIT license file
+├── README.md                      # This documentation
+├── __pycache__/                   # Python bytecode cache
+├── dqn_model.pth                  # Trained neural network model
+├── game_logic.py                  # Tic-Tac-Toe game environment
+├── play.py                        # Command-line interface for gameplay
+├── requirements.txt               # Python dependencies
+├── server.py                      # Flask web server
+├── static/                        # Web frontend assets
+│   ├── index.html                 # Main web page
+│   ├── script.js                  # Frontend JavaScript
+│   └── style.css                  # CSS styles and animations
+└── train.py                       # DQN training script
+```
 
 ## Code Overview
 
@@ -194,7 +230,7 @@ An action is a move the agent can take. In Tic-Tac-Toe, actions are the 9 possib
 ### Reward
 A scalar value given to the agent after taking an action. It indicates how good the action was.
 
-**Example**: +1 for winning, +0.3 for draw, 0 for loss or non-terminal moves.
+**Example**: +1.0 for winning, +0.5 for draw, -1.0 for loss. Non-terminal moves receive 0 reward.
 
 ### Episode
 A complete sequence of states, actions, and rewards from start to end of a game.

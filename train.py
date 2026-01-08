@@ -66,7 +66,7 @@ class ReplayMemory:
     Stores past experiences for training stability and decorrelation.
     """
 
-    def __init__(self, capacity=100000):
+    def __init__(self, capacity=20000):
         """
         Initialize the replay memory.
 
@@ -124,7 +124,7 @@ class DQNAgent:
     and Q-learning updates.
     """
 
-    def __init__(self, lr=1e-3, gamma=0.99, eps=1.0, eps_min=0.1, eps_decay=0.9995, device=None):
+    def __init__(self, lr=1e-3, gamma=0.99, eps=1.0, eps_min=0.05, eps_decay=0.9995, device=None):
         """
         Initialize the DQN agent.
 
@@ -137,7 +137,7 @@ class DQNAgent:
         eps : float, optional
             Initial epsilon for exploration. Default is 1.0.
         eps_min : float, optional
-            Minimum epsilon value. Default is 0.1.
+            Minimum epsilon value. Default is 0.05.
         eps_decay : float, optional
             Epsilon decay factor per episode. Default is 0.9995.
         device : str, optional
@@ -259,12 +259,70 @@ class DQNAgent:
         self.model.load_state_dict(torch.load(path, map_location=self.device))
 
 
+def make_random_opponent_move(env, player):
+    """
+    Make a random or smart opponent move.
+    
+    Parameters
+    ----------
+    env : TicTacToe
+        Game environment.
+    player : int
+        Opponent player (should be -1 for opponent).
+        
+    Returns
+    -------
+    int or None
+        Action taken, or None if no moves available.
+    """
+    # 70% smart logic, 30% random to add variety
+    if random.random() < 0.7:
+        smart = smart_logic(env, player)
+        if smart is not None:
+            return smart
+    
+    available = env.available_actions()
+    if available:
+        return random.choice(available)
+    return None
+
+
+def randomize_starting_position(env):
+    """
+    Initialize board with 0-3 random moves to explore different game states.
+    
+    Parameters
+    ----------
+    env : TicTacToe
+        Game environment to randomize.
+        
+    Returns
+    -------
+    int
+        Next player to move (1 or -1).
+    """
+    # 30% chance to start from random position
+    if random.random() < 0.3:
+        num_moves = random.randint(1, 3)  # 1-3 random moves
+        player = 1
+        for _ in range(num_moves):
+            available = env.available_actions()
+            if not available or env.current_winner or env.is_draw():
+                break
+            action = random.choice(available)
+            env.make_move(action, player)
+            player *= -1
+        return player
+    return 1  # Default: AI starts
+
+
 def train(episodes=20000, batch_size=64):
     """
-    Train the DQN agent through self-play.
+    Train the DQN agent through self-play and opponent play.
 
-    The agent plays against itself, collecting experiences and updating
-    the network. Uses epsilon decay for exploration-exploitation balance.
+    The agent plays against itself and various opponents, collecting experiences
+    from different starting positions and learning both offensive and defensive
+    strategies. Uses epsilon decay for exploration-exploitation balance.
 
     Parameters
     ----------
@@ -276,36 +334,90 @@ def train(episodes=20000, batch_size=64):
     env = TicTacToe()
     agent = DQNAgent()
 
+    wins = 0
+    losses = 0
+    draws = 0
+
     for ep in range(1, episodes + 1):
         state = env.reset()
+        
+        # Randomize starting position to explore all game states
+        current_player = randomize_starting_position(env)
+        state = env.get_state()
+        
+        # Randomize who the AI plays as (1 or -1) to learn both sides
+        ai_player = random.choice([1, -1])
+        
+        # Choose opponent type: 60% self-play, 40% smart opponent
+        use_opponent = random.random() < 0.4
+        
         done = False
-        player = 1  # AI starts
+        player = current_player
+        
         while not done:
-            action = agent.choose_action(state, env, player)
-            env.make_move(action, player)
-
-            reward = 0.0
-            if env.current_winner == player:
-                reward = 1.0
-                done = True
-            elif env.is_draw():
-                reward = 0.3
-                done = True
-
-            next_state = env.get_state()
-            agent.push_memory((state, action, reward, next_state, done))
-
-            # Train on batch
-            agent.train_step(batch_size)
-
-            state = next_state
+            # AI's turn
+            if player == ai_player:
+                action = agent.choose_action(state, env, player)
+                env.make_move(action, player)
+                
+                # Calculate reward
+                reward = 0.0
+                if env.current_winner == ai_player:
+                    reward = 1.0
+                    wins += 1
+                    done = True
+                elif env.current_winner == -ai_player:
+                    reward = -1.0  # Penalty for losing
+                    losses += 1
+                    done = True
+                elif env.is_draw():
+                    reward = 0.5  # Draw is okay
+                    draws += 1
+                    done = True
+                
+                next_state = env.get_state()
+                agent.push_memory((state, action, reward, next_state, done))
+                
+                # Train on batch
+                agent.train_step(batch_size)
+                
+                state = next_state
+            else:
+                # Opponent's turn
+                if use_opponent:
+                    action = make_random_opponent_move(env, player)
+                else:
+                    # Self-play: AI plays both sides
+                    action = agent.choose_action(state, env, player)
+                
+                if action is not None:
+                    env.make_move(action, player)
+                    
+                    # Check game end from opponent's perspective
+                    if env.current_winner == -ai_player:
+                        reward = -1.0
+                        losses += 1
+                        done = True
+                    elif env.current_winner == ai_player:
+                        reward = 1.0
+                        wins += 1
+                        done = True
+                    elif env.is_draw():
+                        reward = 0.5
+                        draws += 1
+                        done = True
+                    
+                    state = env.get_state()
+            
             player *= -1
 
         # Decay epsilon
         agent.eps = max(agent.eps_min, agent.eps * agent.eps_decay)
 
         if ep % 500 == 0:
-            print(f"Episode {ep}\tMemory:{len(agent.memory)}\tEps:{agent.eps:.4f}")
+            win_rate = wins / 500 * 100 if wins + losses + draws > 0 else 0
+            print(f"Episode {ep}\tMemory:{len(agent.memory)}\tEps:{agent.eps:.4f}\tW/L/D: {wins}/{losses}/{draws} ({win_rate:.1f}% wins)")
+            wins = losses = draws = 0
 
     agent.save()
     print(f"Training finished. Model saved to {MODEL_PATH}")
