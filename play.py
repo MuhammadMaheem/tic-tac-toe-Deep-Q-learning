@@ -9,10 +9,11 @@ for playing against the AI agent.
 """
 
 import torch
-from game_logic import TicTacToe, render_board, smart_logic
+from game_logic import TicTacToe, render_board, smart_logic, perfect_ai_move
 from train import DQNAgent
 
 MODEL_PATH = 'dqn_model.pth'
+USE_PERFECT_AI = True  # Set to True for unbeatable AI, False for trained DQN
 
 
 def human_move(env):
@@ -88,9 +89,12 @@ def play():
             if action is None:
                 return
         else:
-            # Use agent: set eps=0 to be greedy
-            agent.eps = 0.0
-            action = agent.choose_action(state, env, player)
+            if USE_PERFECT_AI:
+                action = perfect_ai_move(env, player)
+            else:
+                # Use agent: set eps=0 to be greedy
+                agent.eps = 0.0
+                action = agent.choose_action(state, env, player, training=False)
             print(f'AI chooses: {action + 1}')
 
         env.make_move(action, player)

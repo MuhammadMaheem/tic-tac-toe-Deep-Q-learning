@@ -53,15 +53,15 @@ X | O | 3
 ## Features
 
 - 🧠 **Reinforcement Learning**: AI learns through diverse self-play scenarios using DQN
-- 🎯 **Robust Training**: Randomized starting positions and bidirectional play (X and O)
+- 🎯 **Balanced Training**: 50% random exploration, 50% optimal play during training for robust learning
 - 🤝 **Multiple Opponents**: Trains against itself and smart opponents for generalization
 - 🎮 **Interactive Gameplay**: Play against the trained AI in CLI or web interface
-- 🌐 **Web Interface**: Modern, responsive web application with real-time gameplay
+- 🌐 **Web Interface**: Modern, responsive web application with real-time gameplay and score tracking
 - 📊 **Experience Replay**: Stable training with large memory buffer (100k experiences)
 - 🔄 **Epsilon-Greedy Exploration**: Balances exploration and exploitation (decays to 0.05)
 - 💾 **Model Persistence**: Save and load trained models
 - 🏆 **Smart Logic**: Basic rule-based AI for faster initial learning
-- 📈 **Score Tracking**: Track wins, losses, and draws with detailed statistics
+- 📈 **Score Reset**: Web interface scores reset on page refresh for fresh sessions
 
 ## Technologies and Concepts
 
@@ -83,6 +83,7 @@ Reinforcement Learning is a type of machine learning where an agent learns to ma
 
 - **Why used**: RL is ideal for game-playing AI because it allows the agent to learn optimal strategies through trial and error, without explicit programming of game rules.
 - **How it works in this project**: The AI agent plays Tic-Tac-Toe through diverse training scenarios:
+  - **Balanced exploration**: 50% random moves, 50% optimal play during training
   - **Randomized starting positions** (30% of games start with 1-3 random moves)
   - **Plays as both X and O** to learn offensive and defensive strategies
   - **Multiple opponent types**: 60% self-play, 40% against smart opponents
@@ -105,7 +106,7 @@ A technique where the agent stores past experiences (state, action, reward, next
 A policy that selects the best action with probability (1 - ε) and a random action with probability ε. The ε value decays over time to shift from exploration to exploitation.
 
 - **Why used**: This balances exploration (trying new actions) and exploitation (using known good actions) during training.
-- **How it works**: Initially, ε = 1.0 (mostly random actions). It decays to ε_min = 0.05 over episodes, allowing the agent to explore early and exploit learned knowledge later for optimal play.
+- **How it works**: Initially, ε = 1.0 (mostly random actions). It decays to ε_min = 0.05 over episodes, allowing the agent to explore early and exploit learned knowledge later. During training, actions are further balanced with 50% random vs 50% optimal play for robust learning.
 
 #### Tic-Tac-Toe Game Logic
 The rules and mechanics of the Tic-Tac-Toe game, including board representation, move validation, win checking, and draw detection.
@@ -142,7 +143,8 @@ python train.py
 ```
 
 **Advanced Training Features:**
-- **20000 episodes** by default for robust learning
+- **100000 episodes** by default for robust learning
+- **Balanced training strategy**: 50% random moves, 50% optimal play during training for better generalization
 - **Randomized starting positions**: 30% of games start mid-game (1-3 moves already played) to explore all board states
 - **Bidirectional learning**: AI plays as both X and O to master offensive and defensive play
 - **Diverse opponents**: Trains against itself (60%) and smart opponents (40%) for better generalization
@@ -150,7 +152,7 @@ python train.py
 - Progress printed every 500 episodes showing memory size, exploration rate, and win/loss/draw statistics
 - Trained model automatically saved as `dqn_model.pth`
 
-**Why these features matter**: The original training always started with an empty board and the AI as X, leading to overfitting on specific opening moves. The improved training exposes the agent to every possible game scenario, preventing memorization and ensuring the AI can handle any position effectively.
+**Why these features matter**: The original training always started with an empty board and the AI as X, leading to overfitting on specific opening moves. The improved training exposes the agent to every possible game scenario with balanced exploration (50% random, 50% optimal), preventing memorization and ensuring the AI can handle any position effectively.
 
 ### Playing Against the AI (CLI)
 
@@ -177,7 +179,7 @@ python server.py
 - Click "New Game" to start (choose if you or AI goes first)
 - Click on board cells to make your moves
 - The AI responds automatically
-- Track your wins, losses, and draws
+- Track your wins, losses, and draws (scores reset on page refresh)
 - Modern, responsive interface with animations
 
 ## Project Structure

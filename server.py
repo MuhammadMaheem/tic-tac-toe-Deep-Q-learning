@@ -6,7 +6,7 @@ Provides API endpoints for web-based gameplay.
 from flask import Flask, jsonify, request, send_from_directory
 import torch
 import numpy as np
-from game_logic import TicTacToe, render_board
+from game_logic import TicTacToe, render_board, perfect_ai_move
 from train import DQNAgent
 import os
 
@@ -17,6 +17,7 @@ MODEL_PATH = 'dqn_model.pth'
 # Global game state
 game_env = TicTacToe()
 agent = DQNAgent(device='cpu')
+USE_PERFECT_AI = True  # Set to True for unbeatable AI, False for trained DQN
 
 # Load the trained model
 try:
@@ -70,8 +71,11 @@ def new_game():
     # If AI starts, make the first move
     if ai_starts:
         state = game_env.get_state()
-        agent.eps = 0.0  # Greedy mode
-        action = agent.choose_action(state, game_env, player=1)
+        if USE_PERFECT_AI:
+            action = perfect_ai_move(game_env, player=1)
+        else:
+            agent.eps = 0.0  # Greedy mode
+            action = agent.choose_action(state, game_env, player=1, training=False)
         game_env.make_move(action, player=1)
         
         response['board'] = game_env.board.flatten().tolist()
@@ -142,8 +146,11 @@ def player_move():
     
     # AI move (player = 1)
     state = game_env.get_state()
-    agent.eps = 0.0  # Greedy mode
-    ai_action = agent.choose_action(state, game_env, player=1)
+    if USE_PERFECT_AI:
+        ai_action = perfect_ai_move(game_env, player=1)
+    else:
+        agent.eps = 0.0  # Greedy mode
+        ai_action = agent.choose_action(state, game_env, player=1, training=False)
     game_env.make_move(ai_action, player=1)
     
     # Check if AI won or draw

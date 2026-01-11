@@ -221,3 +221,114 @@ def render_board(env):
     sep = "\n---------\n"
     return sep.join(rows)
 
+
+def minimax(board, depth, is_maximizing, alpha=-float('inf'), beta=float('inf')):
+    """
+    Minimax algorithm with alpha-beta pruning for Tic-Tac-Toe.
+
+    Parameters
+    ----------
+    board : np.ndarray
+        Current board state (3x3).
+    depth : int
+        Current depth in the game tree.
+    is_maximizing : bool
+        True if maximizing player (AI), False if minimizing player (opponent).
+    alpha : float
+        Alpha value for pruning.
+    beta : float
+        Beta value for pruning.
+
+    Returns
+    -------
+    tuple
+        (best_score, best_move) where best_move is None for leaf nodes.
+    """
+    # Check for terminal state
+    winner = None
+    if check_win(board, 1):
+        winner = 1
+    elif check_win(board, -1):
+        winner = -1
+    elif len(available_actions_flat(board)) == 0:
+        winner = 0  # Draw
+
+    if winner is not None:
+        if winner == 1:  # AI wins
+            return 10 - depth, None
+        elif winner == -1:  # Opponent wins
+            return depth - 10, None
+        else:  # Draw
+            return 0, None
+
+    if is_maximizing:
+        max_eval = -float('inf')
+        best_move = None
+        for move in available_actions_flat(board):
+            board[move] = 1
+            eval_score, _ = minimax(board, depth + 1, False, alpha, beta)
+            board[move] = 0
+            if eval_score > max_eval:
+                max_eval = eval_score
+                best_move = move
+            alpha = max(alpha, eval_score)
+            if beta <= alpha:
+                break
+        return max_eval, best_move
+    else:
+        min_eval = float('inf')
+        best_move = None
+        for move in available_actions_flat(board):
+            board[move] = -1
+            eval_score, _ = minimax(board, depth + 1, True, alpha, beta)
+            board[move] = 0
+            if eval_score < min_eval:
+                min_eval = eval_score
+                best_move = move
+            beta = min(beta, eval_score)
+            if beta <= alpha:
+                break
+        return min_eval, best_move
+
+
+def perfect_ai_move(env, player):
+    """
+    Make a perfect move using minimax algorithm.
+
+    This AI will never lose and will win whenever possible.
+
+    Parameters
+    ----------
+    env : TicTacToe
+        Game environment.
+    player : int
+        AI player (should be 1 for X).
+
+    Returns
+    -------
+    int
+        Best move according to minimax.
+    """
+    board = env.board.copy().flatten()
+    _, best_move = minimax(board, 0, True)
+    return best_move
+
+
+def available_actions_flat(board):
+    """Get available actions for a flat board representation."""
+    return [i for i in range(9) if board[i] == 0]
+
+
+def check_win(board, player):
+    """Check if a player has won on the board."""
+    b = board.reshape(3, 3)
+    # Check rows, columns, diagonals
+    for i in range(3):
+        if all(b[i, :] == player) or all(b[:, i] == player):
+            return True
+    # diagonals
+    if b[0, 0] == b[1, 1] == b[2, 2] == player:
+        return True
+    if b[0, 2] == b[1, 1] == b[2, 0] == player:
+        return True
+    return False

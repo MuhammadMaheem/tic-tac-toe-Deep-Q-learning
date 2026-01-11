@@ -31,13 +31,15 @@ class DQN(nn.Module):
         """
         Initialize the DQN network.
 
-        Architecture: Linear(9, 64) -> ReLU -> Linear(64, 64) -> ReLU -> Linear(64, 9)
+        Architecture: Linear(9, 128) -> ReLU -> Linear(128, 128) -> ReLU -> Linear(128, 64) -> ReLU -> Linear(64, 9)
         """
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(9, 64),
+            nn.Linear(9, 128),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 9)
         )
@@ -66,7 +68,7 @@ class ReplayMemory:
     Stores past experiences for training stability and decorrelation.
     """
 
-    def __init__(self, capacity=20000):
+    def __init__(self, capacity=60000):
         """
         Initialize the replay memory.
 
@@ -124,7 +126,7 @@ class DQNAgent:
     and Q-learning updates.
     """
 
-    def __init__(self, lr=1e-3, gamma=0.99, eps=1.0, eps_min=0.05, eps_decay=0.9995, device=None):
+    def __init__(self, lr=1e-3, gamma=0.99, eps=1.0, eps_min=0.005, eps_decay=0.99995, device=None):
         """
         Initialize the DQN agent.
 
@@ -154,11 +156,12 @@ class DQNAgent:
         self.eps_decay = eps_decay
         self.memory = ReplayMemory()
 
-    def choose_action(self, state, env, player):
+    def choose_action(self, state, env, player, training=True):
         """
-        Select an action using epsilon-greedy policy with smart logic.
+        Select an action with different strategies for training vs gameplay.
 
-        First tries rule-based smart moves, then epsilon-greedy with DQN.
+        During training: 50% random, 50% optimal play
+        During gameplay: Always optimal play (smart logic + DQN)
 
         Parameters
         ----------
@@ -168,18 +171,39 @@ class DQNAgent:
             Game environment.
         player : int
             Current player (1 or -1).
+        training : bool, optional
+            Whether this is for training (default True) or gameplay.
 
         Returns
         -------
         int
             Selected action index (0-8).
         """
-        # Rule-based smart move
+        if not training:
+            # Gameplay: Always play optimally
+            smart = smart_logic(env, player)
+            if smart is not None:
+                return smart
+
+            # Use DQN greedily (no epsilon exploration)
+            s = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(self.device)
+            with torch.no_grad():
+                q = self.model(s).cpu().numpy().flatten()
+            masked = np.full(9, -np.inf)
+            for a in env.available_actions():
+                masked[a] = q[a]
+            return int(np.argmax(masked))
+
+        # Training: 80% optimal, 20% random
+        if random.random() < 0.2:
+            return random.choice(env.available_actions())
+
+        # Optimal play during training
         smart = smart_logic(env, player)
         if smart is not None:
             return smart
 
-        # Epsilon-greedy
+        # Epsilon-greedy with DQN
         if random.random() < self.eps:
             return random.choice(env.available_actions())
 
@@ -316,7 +340,7 @@ def randomize_starting_position(env):
     return 1  # Default: AI starts
 
 
-def train(episodes=20000, batch_size=64):
+def train(episodes=30000, batch_size=64):
     """
     Train the DQN agent through self-play and opponent play.
 
@@ -327,7 +351,7 @@ def train(episodes=20000, batch_size=64):
     Parameters
     ----------
     episodes : int, optional
-        Number of training episodes. Default is 20000.
+        Number of training episodes. Default is 60000.
     batch_size : int, optional
         Batch size for training updates. Default is 64.
     """
@@ -357,7 +381,7 @@ def train(episodes=20000, batch_size=64):
         while not done:
             # AI's turn
             if player == ai_player:
-                action = agent.choose_action(state, env, player)
+                action = agent.choose_action(state, env, player, training=True)
                 env.make_move(action, player)
                 
                 # Calculate reward
@@ -388,7 +412,7 @@ def train(episodes=20000, batch_size=64):
                     action = make_random_opponent_move(env, player)
                 else:
                     # Self-play: AI plays both sides
-                    action = agent.choose_action(state, env, player)
+                    action = agent.choose_action(state, env, player, training=True)
                 
                 if action is not None:
                     env.make_move(action, player)
