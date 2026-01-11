@@ -3,6 +3,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.0+-red.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/arthas/tic-tac-toe-Deep-Q-learning/workflows/CI/badge.svg)](https://github.com/arthas/tic-tac-toe-Deep-Q-learning/actions)
 
 A reinforcement learning implementation of Tic-Tac-Toe where an AI agent learns optimal gameplay using Deep Q-Network (DQN). Train the AI through self-play and challenge it in an interactive command-line interface or through a modern web interface!
 
