@@ -1,7 +1,7 @@
 services:
   - type: web
     name: tic-tac-toe-ai
-    env: python3
+    runtime: python3
     buildCommand: pip install -r requirements.txt
     startCommand: python server.py
     envVars:
